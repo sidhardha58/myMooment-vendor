@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import type { OnboardingFormData } from "../OnboardingPage";
 
 const OwnerDetailsStep = () => {
@@ -16,7 +16,7 @@ const OwnerDetailsStep = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const inputBaseStyle =
-    "w-full rounded-lg border pl-11 pr-11 py-3 text-sm outline-none transition";
+    "w-full rounded-lg border px-4 py-3 text-sm outline-none transition";
 
   const getInputStyle = (error?: boolean) =>
     `${inputBaseStyle} ${
@@ -26,7 +26,7 @@ const OwnerDetailsStep = () => {
     }`;
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-md">
       {/* Header */}
       <h1 className="text-2xl font-semibold text-slate-900">Owner Details</h1>
       <p className="mt-2 text-slate-500">
@@ -40,19 +40,13 @@ const OwnerDetailsStep = () => {
             Owner Name
           </label>
 
-          <div className="relative">
-            <User
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              {...register("ownerName", {
-                required: "Owner name is required",
-              })}
-              placeholder="Enter your full name"
-              className={getInputStyle(!!errors.ownerName)}
-            />
-          </div>
+          <input
+            {...register("ownerName", {
+              required: "Owner name is required",
+            })}
+            placeholder="Enter your full name"
+            className={getInputStyle(!!errors.ownerName)}
+          />
 
           {errors.ownerName && (
             <p className="mt-1 text-sm text-red-500">
@@ -67,23 +61,17 @@ const OwnerDetailsStep = () => {
             Company Email ID
           </label>
 
-          <div className="relative">
-            <Mail
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              {...register("email", {
-                required: "Email is required",
-                pattern: {
-                  value: /^\S+@\S+$/i,
-                  message: "Invalid email format",
-                },
-              })}
-              placeholder="test@example.com"
-              className={getInputStyle(!!errors.email)}
-            />
-          </div>
+          <input
+            {...register("email", {
+              required: "Email is required",
+              pattern: {
+                value: /^\S+@\S+$/i,
+                message: "Invalid email format",
+              },
+            })}
+            placeholder="test@example.com"
+            className={getInputStyle(!!errors.email)}
+          />
 
           {errors.email && (
             <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
@@ -97,11 +85,6 @@ const OwnerDetailsStep = () => {
           </label>
 
           <div className="relative">
-            <Lock
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-
             <input
               type={showPassword ? "text" : "password"}
               {...register("password", {
@@ -111,7 +94,7 @@ const OwnerDetailsStep = () => {
                   message: "Minimum 6 characters",
                 },
               })}
-              className={getInputStyle(!!errors.password)}
+              className={`${getInputStyle(!!errors.password)} pr-10`}
             />
 
             <button
@@ -137,11 +120,6 @@ const OwnerDetailsStep = () => {
           </label>
 
           <div className="relative">
-            <Lock
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-
             <input
               type={showConfirmPassword ? "text" : "password"}
               {...register("confirmPassword", {
@@ -149,7 +127,7 @@ const OwnerDetailsStep = () => {
                 validate: (value) =>
                   value === password || "Passwords do not match",
               })}
-              className={getInputStyle(!!errors.confirmPassword)}
+              className={`${getInputStyle(!!errors.confirmPassword)} pr-10`}
             />
 
             <button

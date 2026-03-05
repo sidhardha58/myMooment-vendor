@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { useAuth } from "../../auth/UseAuth";
 
 import StepSidebar from "./components/StepSidebar";
 import OwnerDetailsStep from "./steps/OwnerDetailsStep";
@@ -28,7 +29,6 @@ export type OnboardingFormData = {
   businessService: string;
   displayName: string;
   displayImage: File | null;
-
   latitude?: number;
   longitude?: number;
   houseNo: string;
@@ -45,19 +45,29 @@ export type OnboardingFormData = {
   gstin?: string;
   gstFile?: File | null;
 
+  // FSSAI (conditional)
+  fssaiNumber?: string;
+  fssaiExpiry?: string;
+  fssaiDocument?: File | null;
+
   accountType: string;
   accountHolderName: string;
   accountNumber: string;
   confirmAccountNumber: string;
   ifscCode: string;
   bankName: string;
+  bankBranch?: string;
+  bankAddress?: string;
+  bankCity?: string;
+  bankState?: string;
   bankProof: File | null;
 
   termsAccepted: boolean;
 };
 
-const stepFields: Record<number, (keyof OnboardingFormData)[]> = {
+const baseStepFields: Record<number, (keyof OnboardingFormData)[]> = {
   0: ["ownerName", "email", "password", "confirmPassword"],
+
   1: [
     "businessService",
     "displayName",
@@ -68,7 +78,9 @@ const stepFields: Record<number, (keyof OnboardingFormData)[]> = {
     "city",
     "state",
   ],
+
   2: ["pan", "panName", "panFile", "gstRegistered", "gstin", "gstFile"],
+
   3: [
     "accountType",
     "accountHolderName",
@@ -77,6 +89,7 @@ const stepFields: Record<number, (keyof OnboardingFormData)[]> = {
     "ifscCode",
     "bankProof",
   ],
+
   4: ["termsAccepted"],
 };
 
@@ -86,10 +99,7 @@ const OnboardingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
-
-  useEffect(() => {
-    localStorage.setItem("onboarding_step", currentStep.toString());
-  }, [currentStep]);
+  const { user, login } = useAuth();
 
   const savedDraft = localStorage.getItem("onboarding_draft");
 
@@ -100,25 +110,53 @@ const OnboardingPage = () => {
   });
 
   const { watch, setValue } = methods;
+  const businessService = watch("businessService");
 
+  /* ================= SAVE STEP ================= */
+  useEffect(() => {
+    localStorage.setItem("onboarding_step", currentStep.toString());
+  }, [currentStep]);
+
+  /* ================= SAVE DRAFT (WITHOUT FILES) ================= */
   useEffect(() => {
     const subscription = watch((value) => {
-      const { displayImage, panFile, gstFile, bankProof, ...rest } = value;
+      const {
+        displayImage,
+        panFile,
+        gstFile,
+        bankProof,
+        fssaiDocument,
+        ...rest
+      } = value;
+
       localStorage.setItem("onboarding_draft", JSON.stringify(rest));
     });
 
     return () => subscription.unsubscribe();
   }, [watch]);
 
+  /* ================= RESET FILE FIELDS ================= */
   useEffect(() => {
     setValue("displayImage", null);
     setValue("panFile", null);
     setValue("gstFile", null);
     setValue("bankProof", null);
+    setValue("fssaiDocument", null);
   }, [setValue]);
 
+  /* ================= NEXT STEP ================= */
   const nextStep = async () => {
-    const fieldsToValidate = stepFields[currentStep];
+    let fieldsToValidate = [...baseStepFields[currentStep]];
+
+    if (currentStep === 2 && businessService === "Catering") {
+      fieldsToValidate = [
+        ...fieldsToValidate,
+        "fssaiNumber",
+        "fssaiExpiry",
+        "fssaiDocument",
+      ];
+    }
+
     const valid = await methods.trigger(fieldsToValidate);
     if (!valid) return;
 
@@ -128,36 +166,43 @@ const OnboardingPage = () => {
   };
 
   const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep((prev) => prev - 1);
-    }
+    if (currentStep > 0) setCurrentStep((prev) => prev - 1);
   };
 
-  // ✅ FINAL SUBMIT HANDLER
+  /* ================= FINAL SUBMIT ================= */
   const onSubmit = async (data: OnboardingFormData) => {
     try {
       setIsSubmitting(true);
 
-      // 👉 Replace with real API call
+      console.log("Final Onboarding Data:", data);
+
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      console.log("Final Submit Data:", data);
+      // ✅ Update user status to pending
+      if (user) {
+        const updatedUser = {
+          ...user,
+          status: "pending",
+        };
+
+        login(localStorage.getItem("vendor_token") || "", updatedUser);
+      }
 
       localStorage.removeItem("onboarding_draft");
       localStorage.removeItem("onboarding_step");
 
-      toast.success("Onboarding completed successfully 🎉");
+      toast.success("Application submitted successfully 🎉");
 
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1500);
+      // ✅ Redirect to Submission Success Page
+      navigate("/submission-success");
     } catch (error) {
-      toast.error("Something went wrong. Please try again.");
+      toast.error("Something went wrong.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  /* ================= RENDER STEPS ================= */
   const renderStep = () => {
     switch (currentStep) {
       case 0:
@@ -177,53 +222,57 @@ const OnboardingPage = () => {
 
   return (
     <FormProvider {...methods}>
-      <form className="min-h-screen">
-        <div className="flex flex-col md:flex-row min-h-screen">
-          <StepSidebar steps={steps} currentStep={currentStep} />
+      <form className="min-h-dvh flex flex-col bg-white">
+        <StepSidebar steps={steps} currentStep={currentStep} />
 
-          <div className="flex-1 p-6 md:p-10 bg-white">
-            {renderStep()}
+        <div className="flex-1 flex flex-col min-h-0 md:ml-72">
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 min-h-0 overflow-y-auto p-6 md:p-10 pb-32">
+              <div className="w-full">{renderStep()}</div>
+            </div>
 
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 sm:gap-0 sm:justify-between">
-              {currentStep > 0 ? (
-                <button
-                  type="button"
-                  onClick={prevStep}
-                  className="w-full sm:w-auto px-6 py-2 border border-slate-300 rounded-md"
-                >
-                  Back
-                </button>
-              ) : (
-                <div />
-              )}
+            <div className="sticky bottom-0 bg-white/80 backdrop-blur-md py-3 px-6 md:px-10 border-t border-slate-100 z-30">
+              <div className="max-w-md flex gap-3">
+                {currentStep > 0 && (
+                  <button
+                    type="button"
+                    onClick={prevStep}
+                    className="flex-1 h-9 rounded-md bg-slate-100 text-slate-600 text-sm font-semibold cursor-pointer hover:bg-slate-200 transition-all active:scale-95"
+                  >
+                    Back
+                  </button>
+                )}
 
-              {currentStep === steps.length - 1 ? (
-                <button
-                  type="button"
-                  disabled={!methods.watch("termsAccepted") || isSubmitting}
-                  onClick={async () => {
-                    setSubmitAttempted(true);
-                    const valid = await methods.trigger(["termsAccepted"]);
-                    if (!valid) return;
-                    methods.handleSubmit(onSubmit)();
-                  }}
-                  className={`w-full sm:w-auto px-6 py-2 rounded-md text-white transition ${
-                    methods.watch("termsAccepted") && !isSubmitting
-                      ? "bg-blue-600 hover:bg-blue-700"
-                      : "bg-gray-400 cursor-not-allowed"
-                  }`}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={nextStep}
-                  className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-                >
-                  Next
-                </button>
-              )}
+                {currentStep === steps.length - 1 ? (
+                  <button
+                    type="button"
+                    disabled={!methods.watch("termsAccepted") || isSubmitting}
+                    onClick={async () => {
+                      setSubmitAttempted(true);
+                      const valid = await methods.trigger(["termsAccepted"]);
+                      if (!valid) return;
+                      methods.handleSubmit(onSubmit)();
+                    }}
+                    className={`flex-1 h-9 rounded-md text-sm font-semibold text-white transition-all active:scale-95 ${
+                      methods.watch("termsAccepted") && !isSubmitting
+                        ? "bg-blue-600 cursor-pointer hover:bg-blue-700 shadow-sm"
+                        : "bg-slate-300 cursor-not-allowed"
+                    }`}
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={nextStep}
+                    className={`${
+                      currentStep === 0 ? "w-full" : "flex-1"
+                    } h-9 rounded-md bg-blue-600 text-white text-sm font-semibold cursor-pointer hover:bg-blue-700 shadow-sm transition-all active:scale-95`}
+                  >
+                    Next
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

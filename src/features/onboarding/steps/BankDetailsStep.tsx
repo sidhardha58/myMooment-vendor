@@ -6,6 +6,7 @@ import { FileText, BadgeCheck, Eye, EyeOff, Loader2 } from "lucide-react";
 type FetchedBankDetails = {
   BANK: string;
   BRANCH: string;
+  ADDRESS: string;
   CITY: string;
   STATE: string;
 };
@@ -29,7 +30,7 @@ const BankDetailsStep = () => {
   const [showAccount, setShowAccount] = useState(false);
   const [showConfirmAccount, setShowConfirmAccount] = useState(false);
 
-  // Fetch IFSC details
+  /* ================= FETCH IFSC DETAILS ================= */
   useEffect(() => {
     const fetchBank = async () => {
       if (!ifscCode || ifscCode.length !== 11) {
@@ -37,30 +38,47 @@ const BankDetailsStep = () => {
         return;
       }
 
+      const upperIFSC = ifscCode.toUpperCase();
       const validPattern = /^[A-Z]{4}0[A-Z0-9]{6}$/;
 
-      if (!validPattern.test(ifscCode)) {
+      if (!validPattern.test(upperIFSC)) {
         setBankDetails(null);
         return;
       }
 
       try {
         setLoading(true);
-        const res = await fetch(`https://ifsc.razorpay.com/${ifscCode}`);
+
+        const res = await fetch(`https://ifsc.razorpay.com/${upperIFSC}`);
         if (!res.ok) throw new Error("Invalid IFSC");
 
         const data = await res.json();
 
-        setBankDetails({
+        const formattedData: FetchedBankDetails = {
           BANK: data.BANK,
           BRANCH: data.BRANCH,
+          ADDRESS: data.ADDRESS,
           CITY: data.CITY,
           STATE: data.STATE,
-        });
+        };
 
+        setBankDetails(formattedData);
+
+        // ✅ Store in React Hook Form
         setValue("bankName", data.BANK);
+        setValue("bankBranch", data.BRANCH);
+        setValue("bankAddress", data.ADDRESS);
+        setValue("bankCity", data.CITY);
+        setValue("bankState", data.STATE);
       } catch {
         setBankDetails(null);
+
+        // Clear values if invalid
+        setValue("bankName", "");
+        setValue("bankBranch", "");
+        setValue("bankAddress", "");
+        setValue("bankCity", "");
+        setValue("bankState", "");
       } finally {
         setLoading(false);
       }
@@ -69,6 +87,7 @@ const BankDetailsStep = () => {
     fetchBank();
   }, [ifscCode, setValue]);
 
+  /* ================= FILE UPLOAD ================= */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
 
@@ -86,7 +105,7 @@ const BankDetailsStep = () => {
     }`;
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-md">
       <h1 className="text-2xl font-semibold text-slate-900">Bank Details</h1>
       <p className="mt-2 text-slate-500">
         Enter your bank account details for smooth payment processing.
@@ -242,7 +261,7 @@ const BankDetailsStep = () => {
           </div>
         )}
 
-        {/* Bank Details Card */}
+        {/* Bank Details Display */}
         {bankDetails && (
           <div className="mt-4 p-5 rounded-lg border border-slate-200 bg-slate-50 text-sm space-y-1">
             <p>
@@ -250,6 +269,9 @@ const BankDetailsStep = () => {
             </p>
             <p>
               <strong>Branch:</strong> {bankDetails.BRANCH}
+            </p>
+            <p>
+              <strong>Address:</strong> {bankDetails.ADDRESS}
             </p>
             <p>
               <strong>City:</strong> {bankDetails.CITY}
@@ -260,7 +282,13 @@ const BankDetailsStep = () => {
           </div>
         )}
 
-        {/* Hidden bankProof field */}
+        {/* Hidden Registered Fields */}
+        <input type="hidden" {...register("bankName")} />
+        <input type="hidden" {...register("bankBranch")} />
+        <input type="hidden" {...register("bankAddress")} />
+        <input type="hidden" {...register("bankCity")} />
+        <input type="hidden" {...register("bankState")} />
+
         <input
           type="hidden"
           {...register("bankProof", {
@@ -275,27 +303,25 @@ const BankDetailsStep = () => {
             Upload Passbook / Statement / Cheque
           </label>
 
-          <div className="flex items-center gap-4">
-            <label className="px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-blue-700 transition flex items-center gap-2">
-              <FileText size={16} />
-              Upload Document
-              <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </label>
+          <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-blue-700 transition">
+            <FileText size={16} />
+            Upload Document
+            <input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
 
-            {bankProof instanceof File ? (
-              <span className="text-sm text-emerald-600 font-medium flex items-center gap-1">
-                <BadgeCheck size={16} />
-                {bankProof.name}
-              </span>
-            ) : (
-              <span className="text-sm text-slate-400">No file selected</span>
-            )}
-          </div>
+          {bankProof instanceof File ? (
+            <div className="flex items-center gap-2 mt-3 text-sm text-emerald-600 font-medium">
+              <BadgeCheck size={16} />
+              <span className="truncate max-w-xs">{bankProof.name}</span>
+            </div>
+          ) : (
+            <div className="mt-3 text-sm text-slate-400">No file selected</div>
+          )}
 
           {errors.bankProof && (
             <p className="mt-2 text-sm text-red-500">

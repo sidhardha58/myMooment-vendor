@@ -6,24 +6,24 @@ const Login = () => {
   const { login } = useAuth();
 
   const handleLogin = () => {
-    // Simulated backend response
     const fakeToken = "abc123";
+
     const fakeUser = {
       id: "1",
       name: "Vendor Name",
-      isOnboarded: false, // change to true to test
+      status: "approved", // change to test
     };
 
     login(fakeToken, fakeUser);
 
-    // Redirect based on onboarding status
-    if (!fakeUser.isOnboarded) {
+    if (fakeUser.status === "not_started") {
       navigate("/onboarding");
+    } else if (fakeUser.status === "pending") {
+      navigate("/submission-success");
     } else {
       navigate("/dashboard");
     }
   };
-
   return (
     <div>
       <h1>Login Page</h1>
