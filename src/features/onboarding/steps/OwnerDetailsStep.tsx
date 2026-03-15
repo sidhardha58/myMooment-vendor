@@ -34,7 +34,11 @@ const OwnerDetailsStep = () => {
       </p>
 
       <div className="mt-8 space-y-6">
-        {/* Owner Name */}
+        {/* ===================================================== */}
+        {/* ORIGINAL FINAL UI (KEPT FOR FUTURE BACKEND UPDATE) */}
+        {/* ===================================================== */}
+
+        {/*
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">
             Owner Name
@@ -54,8 +58,9 @@ const OwnerDetailsStep = () => {
             </p>
           )}
         </div>
+        */}
 
-        {/* Email */}
+        {/*
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-2">
             Company Email ID
@@ -74,7 +79,56 @@ const OwnerDetailsStep = () => {
           />
 
           {errors.email && (
-            <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
+            <p className="mt-1 text-sm text-red-500">
+              {errors.email.message}
+            </p>
+          )}
+        </div>
+        */}
+
+        {/* ===================================================== */}
+        {/* TEMP FIELDS REQUIRED BY CURRENT BACKEND */}
+        {/* ===================================================== */}
+
+        {/* First Name */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            First Name
+          </label>
+
+          <input
+            {...register("first_name", {
+              required: "First name is required",
+            })}
+            placeholder="Enter your first name"
+            className={getInputStyle(!!errors.first_name)}
+          />
+
+          {errors.first_name && (
+            <p className="mt-1 text-sm text-red-500">
+              {errors.first_name.message}
+            </p>
+          )}
+        </div>
+
+        {/* Last Name */}
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Last Name
+          </label>
+
+          <input
+            {...register("last_name", {
+              required: "Last name is required",
+            })}
+            placeholder="Enter your last name"
+            className={getInputStyle(!!errors.last_name)}
+          />
+
+          {errors.last_name && (
+            <p className="mt-1 text-sm text-red-500">
+              {errors.last_name.message}
+            </p>
           )}
         </div>
 

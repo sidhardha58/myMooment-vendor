@@ -27,17 +27,17 @@ const BusinessIdentityStep = () => {
     if (gstRegistered !== "Yes") {
       unregister("gstin");
       unregister("gstFile");
-      setValue("gstFile", null);
+      setValue("gstFile", null, { shouldValidate: true });
     }
   }, [gstRegistered, unregister, setValue]);
 
   /* ================= REMOVE FSSAI WHEN NOT CATERING ================= */
   useEffect(() => {
-    if (businessService !== "Catering") {
+    if (businessService !== "food") {
       unregister("fssaiNumber");
       unregister("fssaiExpiry");
       unregister("fssaiDocument");
-      setValue("fssaiDocument", null);
+      setValue("gstFile", null, { shouldValidate: true });
     }
   }, [businessService, unregister, setValue]);
 
@@ -67,12 +67,12 @@ const BusinessIdentityStep = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const expiry = new Date(value);
+    const expiry = new Date(value.getTime());
     expiry.setHours(0, 0, 0, 0);
 
     const diffTime = expiry.getTime() - today.getTime();
-    const diffDays = diffTime / (1000 * 60 * 60 * 24);
-
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
     if (diffDays <= 0) return "FSSAI license is expired";
     if (diffDays <= 30) return "License expiring within 30 days";
 
@@ -134,7 +134,7 @@ const BusinessIdentityStep = () => {
             Upload PAN
             <input
               type="file"
-              accept=".pdf,.doc,.docx"
+              accept=".jpg,.jpeg,.png,.pdf"
               onChange={(e) => handleFileChange(e, "panFile")}
               className="hidden"
             />
@@ -193,7 +193,7 @@ const BusinessIdentityStep = () => {
               Upload GST
               <input
                 type="file"
-                accept=".pdf,.doc,.docx"
+                accept=".jpg,.jpeg,.png,.pdf"
                 onChange={(e) => handleFileChange(e, "gstFile")}
                 className="hidden"
               />
@@ -209,7 +209,7 @@ const BusinessIdentityStep = () => {
         )}
 
         {/* ================= FSSAI SECTION ================= */}
-        {businessService === "Catering" && (
+        {businessService === "food" && (
           <div className="pt-6 border-t border-slate-200 space-y-6">
             <h3 className="text-lg font-semibold text-slate-900">
               FSSAI License Details
@@ -273,7 +273,9 @@ const BusinessIdentityStep = () => {
                   <>
                     <DatePicker
                       selected={field.value ?? null}
-                      onChange={(date: Date | null) => field.onChange(date)}
+                      onChange={(date: Date | null) =>
+                        field.onChange(date ?? undefined)
+                      }
                       dateFormat="dd/MM/yyyy"
                       placeholderText="DD/MM/YYYY"
                       minDate={new Date()}
@@ -308,7 +310,7 @@ const BusinessIdentityStep = () => {
                 Upload FSSAI License
                 <input
                   type="file"
-                  accept=".pdf,.doc,.docx"
+                  accept=".jpg,.jpeg,.png,.pdf"
                   onChange={(e) => handleFileChange(e, "fssaiDocument")}
                   className="hidden"
                 />

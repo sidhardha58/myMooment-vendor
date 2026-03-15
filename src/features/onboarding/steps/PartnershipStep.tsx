@@ -37,6 +37,7 @@ const PartnershipStep = ({ submitAttempted }: Props) => {
             >
               Partnership Terms & Conditions
             </a>
+            and authorize TDS deduction as per applicable tax laws.
           </span>
         </label>
 

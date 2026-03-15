@@ -3,33 +3,37 @@ import { useAuth } from "./UseAuth";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedStatuses?: string[];
+  allowedVendorStatuses?: string[];
 }
 
-const ProtectedRoute = ({ children, allowedStatuses }: ProtectedRouteProps) => {
+const ProtectedRoute = ({
+  children,
+  allowedVendorStatuses,
+}: ProtectedRouteProps) => {
   const { user, isAuthenticated } = useAuth();
 
-  // Not logged in
+  console.log("Auth Debug:", { user, isAuthenticated });
+
   if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  // If route requires specific statuses
-  if (allowedStatuses && !allowedStatuses.includes(user.status)) {
-    // Redirect based on user status
-    if (user.status === "not_started") {
-      return <Navigate to="/onboarding" replace />;
-    }
+  const vendorStatus = user.vendor_operational_status;
 
-    if (user.status === "pending") {
-      return <Navigate to="/submission-success" replace />;
-    }
+  if (allowedVendorStatuses && !allowedVendorStatuses.includes(vendorStatus)) {
+    switch (vendorStatus) {
+      case "onboarding_incomplete":
+        return <Navigate to="/onboarding" replace />;
 
-    if (user.status === "approved") {
-      return <Navigate to="/dashboard" replace />;
-    }
+      case "verification_pending":
+        return <Navigate to="/submission-success" replace />;
 
-    return <Navigate to="/login" replace />;
+      case "active":
+        return <Navigate to="/dashboard" replace />;
+
+      default:
+        return <Navigate to="/login" replace />;
+    }
   }
 
   return <>{children}</>;

@@ -45,7 +45,7 @@ const Sidebar = () => {
     "flex items-center gap-3 px-4 py-3 rounded-lg text-[15px] font-medium transition";
 
   return (
-    <aside className="flex flex-col h-screen w-64 bg-white border-r border-slate-200">
+    <aside className="fixed top-0 left-0 h-screen w-[266px] flex flex-col bg-white border-r border-slate-200 overflow-y-auto">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-200">
         <img src="/vite.svg" alt="logo" className="h-9 w-9" />
@@ -105,7 +105,7 @@ const Sidebar = () => {
           {/* Logout */}
           <button
             onClick={handleLogout}
-            className={`${baseItemStyle} text-red-600 cursor-pointer hover:bg-red-50 w-full`}
+            className={`${baseItemStyle} text-red-600 hover:bg-red-50 w-full`}
           >
             <LogOut size={20} />
             Logout

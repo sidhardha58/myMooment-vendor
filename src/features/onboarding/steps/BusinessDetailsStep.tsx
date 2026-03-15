@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useFormContext } from "react-hook-form";
 import type { OnboardingFormData } from "../OnboardingPage";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Image as ImageIcon } from "lucide-react";
+import { CheckCircle2, Image as ImageIcon, MapPin } from "lucide-react";
 
 const BusinessDetailsStep = () => {
   const {
@@ -12,14 +13,26 @@ const BusinessDetailsStep = () => {
   } = useFormContext<OnboardingFormData>();
 
   /* ================= WATCH FORM VALUES ================= */
+
   const businessService = watch("businessService");
   const displayName = watch("displayName");
   const houseNo = watch("houseNo");
   const area = watch("area");
   const city = watch("city");
+  const state = watch("state");
+  const pincode = watch("pincode");
+
+  const latitude = watch("latitude");
+  const longitude = watch("longitude");
+
   const displayImage = watch("displayImage");
 
+  /* ================= LOCATION TOGGLE ================= */
+
+  const [locationEnabled, setLocationEnabled] = useState(false);
+
   /* ================= IMAGE PREVIEW ================= */
+
   const [preview, setPreview] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,6 +56,7 @@ const BusinessDetailsStep = () => {
   };
 
   /* ================= INPUT STYLE ================= */
+
   const inputStyle = (error?: boolean) =>
     `w-full rounded-lg border px-4 py-3 text-sm outline-none transition ${
       error
@@ -53,16 +67,19 @@ const BusinessDetailsStep = () => {
   return (
     <div className="flex flex-col lg:flex-row items-start gap-12 xl:gap-24 w-full">
       {/* ================= LEFT SIDE FORM ================= */}
+
       <div className="w-full max-w-md shrink-0">
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
           Business Details
         </h1>
+
         <p className="mt-2 text-slate-500 text-[15px]">
           Tell us more about your business services and location.
         </p>
 
         <div className="mt-8 space-y-6">
-          {/* Business Service */}
+          {/* ================= Business Service ================= */}
+
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
               Business Service
@@ -78,9 +95,14 @@ const BusinessDetailsStep = () => {
                 )}`}
               >
                 <option value="">Select service</option>
-                <option value="Catering">Catering</option>
-                <option value="Photography">Photography</option>
-                <option value="Decoration">Decoration</option>
+
+                {/* Future backend categories */}
+                {/* <option value="Catering">Catering</option> */}
+
+                <option value="food">Food</option>
+                <option value="photography">Photography</option>
+                <option value="makeup">Makeup</option>
+                <option value="mehandi">Mehandi</option>
               </select>
 
               <svg
@@ -103,11 +125,13 @@ const BusinessDetailsStep = () => {
             )}
           </div>
 
-          {/* Display Name */}
+          {/* ================= Display Name ================= */}
+
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
               Display Name
             </label>
+
             <input
               {...register("displayName", {
                 required: "Display name is required",
@@ -115,6 +139,7 @@ const BusinessDetailsStep = () => {
               placeholder="Your Business Name"
               className={inputStyle(!!errors.displayName)}
             />
+
             {errors.displayName && (
               <p className="mt-1 text-xs text-red-500 font-medium">
                 {errors.displayName.message}
@@ -122,7 +147,8 @@ const BusinessDetailsStep = () => {
             )}
           </div>
 
-          {/* Shop Image Upload */}
+          {/* ================= Shop Image Upload ================= */}
+
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
               Shop Image
@@ -170,7 +196,8 @@ const BusinessDetailsStep = () => {
             )}
           </div>
 
-          {/* Location Details */}
+          {/* ================= Location Details ================= */}
+
           <div className="pt-4 border-t border-slate-100">
             <h3 className="text-lg font-bold text-slate-900 tracking-tight mb-4">
               Location Details
@@ -182,22 +209,74 @@ const BusinessDetailsStep = () => {
                 placeholder="House No / Floor"
                 className={inputStyle(!!errors.houseNo)}
               />
+
               <input
                 {...register("area", { required: "Required" })}
                 placeholder="Area / Street"
                 className={inputStyle(!!errors.area)}
               />
+
               <input
                 {...register("city", { required: "Required" })}
                 placeholder="City"
                 className={inputStyle(!!errors.city)}
               />
+
+              {/* Backend required fields */}
+              <input
+                {...register("state", { required: "Required" })}
+                placeholder="State"
+                className={inputStyle(!!errors.state)}
+              />
+
+              <input
+                {...register("pincode", { required: "Required" })}
+                placeholder="Pincode"
+                type="number"
+                className={inputStyle(!!errors.pincode)}
+              />
+            </div>
+
+            {/* ================= Location Coordinates ================= */}
+
+            <div className="mt-6">
+              <button
+                type="button"
+                onClick={() => setLocationEnabled(!locationEnabled)}
+                className="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
+              >
+                <MapPin size={16} />
+
+                {locationEnabled ? "Remove Coordinates" : "Add Coordinates"}
+
+                {locationEnabled && <CheckCircle2 size={16} />}
+              </button>
+
+              {locationEnabled && (
+                <div className="space-y-4 mt-4">
+                  {/* Future: Replace with Mapbox */}
+                  {/* TODO: Integrate Mapbox location picker */}
+
+                  <input
+                    {...register("latitude")}
+                    placeholder="Latitude"
+                    className={inputStyle()}
+                  />
+
+                  <input
+                    {...register("longitude")}
+                    placeholder="Longitude"
+                    className={inputStyle()}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* ================= RIGHT SIDE PREVIEW ================= */}
+
       <div className="flex-1 w-full max-w-sm sticky top-10 hidden lg:block lg:mt-12">
         <PreviewSection
           preview={preview}
@@ -209,7 +288,6 @@ const BusinessDetailsStep = () => {
         />
       </div>
 
-      {/* MOBILE PREVIEW */}
       <div className="lg:hidden w-full mt-8">
         <PreviewSection
           preview={preview}
@@ -241,9 +319,11 @@ const PreviewSection = (props: ProfilePreviewProps) => {
       <h3 className="text-[11px] font-bold tracking-widest text-slate-400 uppercase mb-6 w-full text-center">
         Customer View Reference
       </h3>
+
       <div className="w-full max-w-70">
         <ProfilePreview {...props} />
       </div>
+
       <p className="mt-6 text-[11px] text-slate-400 leading-relaxed text-center italic">
         This square profile format is optimized for mobile app discovery.
       </p>

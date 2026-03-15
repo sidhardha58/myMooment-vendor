@@ -240,6 +240,9 @@ const BankDetailsStep = () => {
                 value: /^[A-Z]{4}0[A-Z0-9]{6}$/,
                 message: "Enter valid IFSC (e.g. SBIN0001234)",
               },
+              onChange: (e) => {
+                e.target.value = e.target.value.toUpperCase();
+              },
             })}
             placeholder="e.g. SBIN0001234"
             className={inputStyle(!!errors.ifscCode)}
