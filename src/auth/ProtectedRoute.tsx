@@ -10,15 +10,17 @@ const ProtectedRoute = ({
   children,
   allowedVendorStatuses,
 }: ProtectedRouteProps) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, profile, isAuthenticated } = useAuth();
 
-  console.log("Auth Debug:", { user, isAuthenticated });
+  console.log("ProtectedRoute Debug:", { user, profile, isAuthenticated });
 
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated || !user || !profile) {
     return <Navigate to="/login" replace />;
   }
 
-  const vendorStatus = user.vendor_operational_status;
+  const vendorStatus = profile.vendor_operational_status || "";
+
+  console.log("ProtectedRoute Vendor Status:", vendorStatus);
 
   if (allowedVendorStatuses && !allowedVendorStatuses.includes(vendorStatus)) {
     switch (vendorStatus) {
@@ -29,6 +31,7 @@ const ProtectedRoute = ({
         return <Navigate to="/submission-success" replace />;
 
       case "active":
+      case "completed":
         return <Navigate to="/dashboard" replace />;
 
       default:

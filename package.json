@@ -12,7 +12,8 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@splinetool/react-spline": "github:splinetool/react-spline",
-    "axios": "^1.13.5",
+    "axios": "^1.15.0",
+    "firebase": "^12.12.0",
     "lucide-react": "^0.575.0",
     "mapbox-gl": "^3.19.0",
     "react": "^19.2.0",

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import AddMenuWizard from "./addMenu/AddMenuWizard";
 
 type Service = {
   id: number;
@@ -13,28 +14,27 @@ type Props = {
 
 export default function MenuCatalog({ selectedService }: Props) {
   const [filter, setFilter] = useState<"veg" | "nonveg">("veg");
+  const [showWizard, setShowWizard] = useState(false);
 
   return (
-    <div className="bg-white rounded-xl shadow p-6">
+    <div className="space-y-4">
       {/* HEADER */}
-
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-lg font-semibold">
-            Menu Catalog — {selectedService.name}
-          </h2>
-
+          <h3 className="text-md font-semibold text-gray-800">Menu Items</h3>
           <p className="text-sm text-gray-500">{selectedService.items} items</p>
         </div>
 
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg">
+        <button
+          onClick={() => setShowWizard(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+        >
           + Add Item
         </button>
       </div>
 
-      {/* VEG / NON VEG FILTER */}
-
-      <div className="flex gap-4 mb-4">
+      {/* FILTER */}
+      <div className="flex gap-4">
         <button
           onClick={() => setFilter("veg")}
           className={`px-4 py-2 rounded-lg ${
@@ -58,9 +58,13 @@ export default function MenuCatalog({ selectedService }: Props) {
         </button>
       </div>
 
-      {/* MENU ITEMS PLACEHOLDER */}
+      {/* CONTENT */}
+      <div className="text-gray-400 text-sm border border-dashed border-gray-200 rounded-xl p-6 text-center">
+        Menu items will appear here
+      </div>
 
-      <div className="text-gray-400 text-sm">Menu items will appear here</div>
+      {/* MODAL */}
+      {showWizard && <AddMenuWizard onClose={() => setShowWizard(false)} />}
     </div>
   );
 }

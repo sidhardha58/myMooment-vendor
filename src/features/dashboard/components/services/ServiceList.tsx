@@ -17,36 +17,41 @@ export default function ServiceList({
   setSelectedService,
 }: Props) {
   return (
-    <div className="bg-white rounded-xl shadow p-4">
-      <h2 className="font-semibold mb-1">Your Services</h2>
+    <div className="bg-white rounded-2xl shadow p-5 w-full max-w-md">
+      <div className="mt-4 space-y-2">
+        {services.map((service) => {
+          const isSelected = selectedService.id === service.id;
 
-      <p className="text-sm text-gray-500 mb-4">
-        Select a service to configure
-      </p>
+          return (
+            <div
+              key={service.id}
+              onClick={() => setSelectedService(service)}
+              className={`flex justify-between items-center p-4 rounded-xl cursor-pointer transition ${
+                isSelected
+                  ? "bg-blue-50 border-l-4 border-blue-500"
+                  : "hover:bg-gray-50"
+              }`}
+            >
+              {/* LEFT */}
+              <div>
+                <p className="font-semibold text-gray-800">{service.name}</p>
 
-      <div className="space-y-2">
-        {services.map((service) => (
-          <div
-            key={service.id}
-            onClick={() => setSelectedService(service)}
-            className={`flex justify-between items-center p-3 rounded-lg cursor-pointer ${
-              selectedService.id === service.id
-                ? "bg-blue-50 border-l-4 border-blue-500"
-                : "hover:bg-gray-50"
-            }`}
-          >
-            <div>
-              <p className="font-medium">{service.name}</p>
+                <p className="text-sm text-gray-500">{service.items} items</p>
+              </div>
 
-              <p className="text-sm text-gray-500">
-                {service.items} menu items •{" "}
-                {service.active ? "Active" : "Inactive"}
-              </p>
+              {/* RIGHT */}
+              <div className="flex items-center gap-3">
+                {service.active && (
+                  <span className="bg-green-100 text-green-600 text-xs font-medium px-3 py-1 rounded-full">
+                    Active
+                  </span>
+                )}
+
+                <span className="text-gray-400 text-lg">›</span>
+              </div>
             </div>
-
-            <span className="text-gray-400">›</span>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/UseAuth";
 import { sendPhoneOTP, verifyPhoneOTP, loginUser } from "../lib/authApi";
-import { getVendorProfile } from "../lib/vendorApi";
+import api from "../lib/axios";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -37,22 +37,47 @@ const Login = () => {
         return;
       }
 
-      const vendorRes = await getVendorProfile(token);
-      const vendorStatus = vendorRes?.data?.vendor?.vendor_operational_status;
+      // ✅ Save token first (for interceptor)
+      localStorage.setItem("vendor_token", token);
+      localStorage.setItem("vendor_user", JSON.stringify(userData));
 
-      login(token, {
-        ...userData,
-        vendor_operational_status: vendorStatus,
-      });
+      // ✅ Fetch profile
+      const profileRes = await api.get("/vendor/profile");
 
-      if (vendorStatus === "onboarding_incomplete") {
-        navigate("/onboarding");
-      } else if (vendorStatus === "verification_pending") {
-        navigate("/submission-success");
-      } else if (vendorStatus === "active") {
-        navigate("/dashboard");
-      } else {
-        alert("Vendor account inactive or blocked");
+      console.log("FULL PROFILE RESPONSE:", profileRes.data);
+
+      const vendorProfile = profileRes.data?.data?.vendor;
+
+      if (!vendorProfile) {
+        alert("Failed to fetch profile");
+        return;
+      }
+
+      // ✅ Store ONLY vendor (clean structure)
+      login(token, userData, vendorProfile);
+
+      const vendorStatus = vendorProfile.vendor_operational_status;
+
+      console.log("Vendor Status:", vendorStatus);
+
+      switch (vendorStatus) {
+        case "active":
+        case "completed":
+          navigate("/dashboard");
+          break;
+
+        case "onboarding_incomplete":
+          navigate("/onboarding");
+          break;
+
+        case "verification_pending":
+        case "pending":
+          navigate("/submission-success");
+          break;
+
+        default:
+          console.warn("Unknown vendor status:", vendorStatus);
+          navigate("/login");
       }
     } catch (err) {
       console.error(err);
@@ -92,28 +117,31 @@ const Login = () => {
 
       const token = res.data.registerResult?.data?.token;
       const userData = res.data.registerResult?.data?.user;
+      const isOldUser = res.data.registerResult?.data?.isOldUser;
 
       if (!token || !userData) {
-        alert("Invalid login response");
+        alert("Invalid response");
         return;
       }
 
-      const vendorRes = await getVendorProfile(token);
-      const vendorStatus = vendorRes?.data?.vendor?.vendor_operational_status;
+      // ❌ NO PROFILE FROM BACKEND → CREATE TEMP PROFILE
+      const tempProfile = {
+        id: userData.id,
+        user_id: userData.id,
+        vendor_operational_status: isOldUser
+          ? "active"
+          : "onboarding_incomplete",
+        display_name: "",
+        full_name: "",
+      };
 
-      login(token, {
-        ...userData,
-        vendor_operational_status: vendorStatus,
-      });
+      login(token, userData, tempProfile);
 
-      if (vendorStatus === "onboarding_incomplete") {
+      // ✅ NAVIGATION FIX
+      if (!isOldUser) {
         navigate("/onboarding");
-      } else if (vendorStatus === "verification_pending") {
-        navigate("/submission-success");
-      } else if (vendorStatus === "active") {
-        navigate("/dashboard");
       } else {
-        alert("Vendor account inactive or blocked");
+        navigate("/dashboard");
       }
     } catch (err) {
       console.error(err);
@@ -131,8 +159,7 @@ const Login = () => {
         <button onClick={() => setMode("register")}>Register</button>
       </div>
 
-      {/* ---------------- LOGIN UI ---------------- */}
-
+      {/* LOGIN UI */}
       {mode === "login" && (
         <>
           <input
@@ -152,12 +179,11 @@ const Login = () => {
         </>
       )}
 
-      {/* ---------------- REGISTER UI ---------------- */}
-
+      {/* REGISTER UI */}
       {mode === "register" && step === "phone" && (
         <>
           <input
-            placeholder="Enter phone number (+919876543210)"
+            placeholder="Enter phone number"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
